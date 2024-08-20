@@ -1,0 +1,57 @@
+﻿@model ApproveAccountsModel
+@{
+    ViewData["Title"] = "Approve accounts";
+
+    string GetUserNameText(UserModel user)
+    {
+        return user.UserName.Length <= 40 ? user.UserName : user.UserName.Substring(0, 39) + "...";
+    }
+}
+
+<form method="post" style="min-height: 34rem">
+
+    <div class="row d-flex flex-column" style="min-height: 34rem">
+        <h1 class="text-center mb-4 align-self-start">@ViewData["Title"]</h1>
+
+        @if (Model.Users != null && Model.Users.Count > 0)
+        {
+            <div class="d-flex justify-content-between flex-wrap">
+                @foreach (var user in Model.Users)
+                {
+                    <div class="col-md-6 p-2">
+                        <div class="d-flex justify-content-between p-2 shadow rounded" style="align-items: flex-start;">
+                            <div class="pt-2">
+                                <span>
+                                    @user.RoleName: @GetUserNameText(user)
+                                </span>
+                            </div>
+                            <div>
+                                <button type="button" class="btn custom-btn" onclick="approveUser(event.target, '@user.Id')">Approve</button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+           
+            <div class="d-flex justify-content-center mt-auto">
+                <input class="col-md-2 btn custom-btn m-4" type="submit" value="Save" disabled="true" id="btnSave" />
+                <input class="col-md-2 btn custom-btn m-4" onclick="clearApproved()" type="button" value="Cancel" disabled="true" id="btnClear" />
+            </div>
+        }
+        else
+        {
+            <h3 class="text-center">There are no new accounts to approve</h3>
+        }
+    </div>
+
+    <div style="display: none">
+        <input asp-for="approveUserIds" id="approvedUserIds"/>
+    </div>
+    
+</form>
+
+
+<script src="/js/ManageAccounts.js"></script>
+
+
+

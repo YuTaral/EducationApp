@@ -1,0 +1,134 @@
+﻿@model LessonDetailsServiceModel
+
+<head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="/css/site.css" asp-append-version="true" />
+</head>
+
+@{
+    ViewData["Title"] = "Lesson details";
+
+    var viewExerciceAsTeacher = (User.IsInRole("Teacher") || User.IsInRole("Admin")) && Model.LessonType == "Exercise";
+    var viewExerciceAsStudent= User.IsInRole("Student")  && Model.LessonType == "Exercise";
+
+    string GetUploadText(UploadedHomeworks record)
+    {
+        var uploadText = "";
+        if (record.Uploader.FirstName != null)
+        {
+            uploadText += record.Uploader.FirstName + " ";
+        }
+        if (record.Uploader.LastName != null)
+        {
+            uploadText += record.Uploader.LastName + ", ";
+        }
+        if (record.Uploader.FacultyNumber != null)
+        {
+            uploadText += "Faculty number:  " + record.Uploader.FacultyNumber;
+        }
+
+        return uploadText;
+    }
+
+
+    Boolean IsUploadedOnTime(UploadedHomeworks record)
+    {
+        return (Model.ToDateTime - record.Date).TotalSeconds > 0; 
+    }
+
+
+    String GetTimeDifferenceText(UploadedHomeworks record)
+    {
+        TimeSpan timeDifference = new TimeSpan();
+        var timeDifferenceText = "";
+
+        timeDifference = Model.ToDateTime.Subtract(record.Date);
+
+        if (timeDifference.Hours * -1 > 0)
+        {
+            timeDifferenceText += timeDifference.Hours * -1 + "h ";
+        }
+        if (timeDifference.Minutes * -1 > 0)
+        {
+            timeDifferenceText += timeDifference.Minutes * -1 + "m ";
+        }
+        if (timeDifference.Seconds * -1 > 0)
+        {
+            timeDifferenceText += timeDifference.Seconds * -1 + "s";
+        }
+
+        return timeDifferenceText;
+    }
+}
+
+
+@if (viewExerciceAsTeacher)
+{
+    <div class="d-flex justify-content-between mt-4 col-md-12">
+            <div class="row col-md-5 card-details p-3 mt-4">
+            <h3 class="text-center mb-2 pb-2 border-bottom border-dark border-2">Uploaded homeworks</h3>
+
+            @if (Model.UploadedHomeworks != null && Model.UploadedHomeworks.Count > 0)
+                {
+                    @foreach (var record in Model.UploadedHomeworks)
+                    {
+
+                        <div class="row col-md-12 d-flex justify-content-between m-2">
+                            <div class="row d-flex flex-column justify-content-center p-2 border-bottom border-dark border-2">
+                            <span class="text-center">@GetUploadText(record)</span>
+                                <span class="text-center">File name: @record.Name</span>
+                                <a class="col-4 offset-4 custom-btn mt-2" href="@Url.Action("DownloadMaterials", "Lessons",  new {fileId = record.Id})">Download</a>
+                                @if (!IsUploadedOnTime(record))
+                                {
+                                    <span class="text-center" style="color: white; font-style: italic">Late by @GetTimeDifferenceText(record)</span>
+                                }
+                            </div>
+                        </div>
+
+                    }
+                } else {
+                    <h4 class="text-center mt-2">No one has uploaded homework yet.</h4>
+                }
+            
+            </div>
+        <partial name="_LessonDetailsPartial" model="@Model" />
+    </div>
+}
+else if (viewExerciceAsStudent)
+{
+    <div class="d-flex justify-content-between mt-2 col-md-12">
+        <div class="row col-md-5 card-details p-3 mt-4">
+            <h3 class="text-center mb-2 pb-2 border-bottom border-dark border-2">My uploaded homeworks</h3>
+
+            @if (Model.UploadedHomeworks != null && Model.UploadedHomeworks.Count > 0)
+            {
+                @foreach (var record in Model.UploadedHomeworks)
+                {
+                    <div class="row col-md-12 d-flex justify-content-between m-2">
+                        <div class="row d-flex flex-column justify-content-center p-2 border-bottom border-dark border-2">
+                            <span class="text-center">File name: @record.Name</span>
+                            <a class="col-4 offset-4 custom-btn mt-2" href="@Url.Action("DownloadMaterials", "Lessons",  new {fileId = record.Id})">Download</a>
+                            @if (!IsUploadedOnTime(record))
+                            {
+                                <span class="text-center mt-2" style="color: white; font-style: italic">Late by @GetTimeDifferenceText(record)</span>
+                            }
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <h4 class="text-center mt-2">You have not uploaded your homework yet</h4>
+            }
+
+        </div>
+        <partial name="_LessonDetailsPartial" model="@Model" />
+    </div>
+} 
+else {
+    <div class="d-flex justify-content-center">
+        <partial name="_LessonDetailsPartial" model="@Model" />
+    </div>
+}
+
+

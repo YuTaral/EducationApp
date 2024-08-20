@@ -1,0 +1,197 @@
+﻿@model TestParticipantModel
+
+@{
+    ViewBag.Title = "Check answers";
+
+    var next = Model.RateCurrentQuestionAnswer.Sequence + 1;
+    var prev = Model.RateCurrentQuestionAnswer.Sequence - 1;
+    var displayName = Model.UserName;
+    if (Model.FirstName != "") {
+        displayName += ", " + Model.FirstName;    
+    }
+    if (Model.LastName != "") {
+        displayName += " " + Model.LastName;
+    }
+
+    string GetQuestionNumberClass(int i)
+    {
+        var qClass = "";
+
+        if (Model.RateCurrentQuestionAnswer.Sequence == i)
+        {
+            qClass = "custom-btn m-1";
+        }
+        else
+        {
+            qClass = "btn border m-1";
+
+        }
+
+        return qClass;
+    }
+}
+
+
+@if (Model.ShowResult)
+{
+    <div class="container">
+        <div class="modal" id="modalResults" style="display: block">
+            <div class="modal-dialog">
+                <div class="modal-content shadow">
+                    <div>
+                        <h1 class="text-center">Final results</h1>
+                    </div>
+                    <div class="modal-body">
+                        <div class="text-center">
+                            <span class="text-center">@displayName</span>
+                            <br />
+                            <span class="text-center">Faculty number: @Model.FacultyNumber</span>
+                            <br />
+                            <span class="text-center">Points: @Model.Points / @Model.MaxPoints</span>
+                            <br />
+                            <span class="text-center">@Model.Percent%</span>
+                            <br />
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between mt-2 mb-2">
+                        <button type="button" class="custom-btn" data-bs-dismiss="modal" id="closeDialog">No</button>
+                        
+                        <form method="post" asp-controller="Tests" asp-action="SubmitGrade">
+
+                            <input type="hidden" name="GradeId" value="@Model.GradeId" />
+                            <input type="hidden" name="Percent" value="@Model.Percent" />
+                            <input type="hidden" name="TestId" value="@Model.TestId" />
+
+                             <button type="submit" class="custom-btn">Submit</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+
+<h3 class="text-center mb-2">Rate student answers</h3>
+<h4 class="text-center mb-4">@displayName, Faculty number: @Model.FacultyNumber</h4>
+
+
+<div class="d-flex justify-content-center mt-2 col-md-12">
+
+    <div class="row p-3 col-12 mb-4">
+
+        <div class="d-flex justify-content-between col-md-12">
+            <div class="mb-4 m-1">
+                @if (Model.RateCurrentQuestionAnswer.PreviousExists)
+                {
+                    <a class="custom-btn" asp-controller="Tests" asp-action="CheckAnswers" asp-route-studentId="@Model.StudentId" asp-route-testId="@Model.TestId" asp-route-sequence="@prev">&lt;</a>
+                }
+                else
+                {
+                    <button type="button" class="custom-btn btn disabled">&lt;</button>
+                }
+            </div>
+
+            <div class="d-flex justify-content-center mb-4 flex-wrap">
+
+                @for (int i = 1; i <= Model.RateCurrentQuestionAnswer.AllQuestionsCount; i++)
+                {
+                    <a class="@GetQuestionNumberClass(i)" asp-controller="Tests" asp-action="CheckAnswers" asp-route-studentId="@Model.StudentId" asp-route-testId="@Model.TestId" asp-route-sequence="@i">@i</a>
+                }
+
+            </div>
+
+            <div class="mb-4 m-1">
+                @if (Model.RateCurrentQuestionAnswer.NextExists)
+                {
+                    <a class="custom-btn" asp-controller="Tests" asp-action="CheckAnswers" asp-route-studentId="@Model.StudentId" asp-route-testId="@Model.TestId" asp-route-sequence="@next">&gt;</a>
+                }
+                else
+                {
+                    <button type="button" class="btn disabled custom-btn">&gt;</button>
+                }
+            </div>
+        </div>
+
+        <dv class="row col-md-12 d-flex-justify-content-center">
+            <span class="text-center mb-2" id="countdown" style="font-size: 20px; font-style: italic; font-weight: bold"></span>
+        </dv>
+
+        <div class="card-details mb-4 d-flex flex-column p-3">
+            <form method="post" onsubmit="return handleSubmit()">
+                <div style="display: none">
+                    <input asp-for="@Model.RateCurrentQuestionAnswer.Id" value="@Model.RateCurrentQuestionAnswer.Id">
+                    <input asp-for="@Model.CurrentQuestionAnswer.Id" value="@Model.CurrentQuestionAnswer.Id">
+                    <input asp-for="@Model.GradeId" value="@Model.GradeId">
+                    <input asp-for="@Model.RateCurrentQuestionAnswer.Sequence" value="@Model.RateCurrentQuestionAnswer.Sequence">
+                    <input asp-for="@Model.RateCurrentQuestionAnswer.MaxPoints" value="@Model.RateCurrentQuestionAnswer.MaxPoints" id="maxPoints">
+                    <input asp-for="@Model.RateCurrentQuestionAnswer.AllQuestionsCount" value="@Model.RateCurrentQuestionAnswer.AllQuestionsCount">
+                </div>
+
+
+                <p class="" style="width: 90%; font-size: 20px">@Model.RateCurrentQuestionAnswer.Sequence. @Model.RateCurrentQuestionAnswer.QuestionText</p>
+
+                @if (Model.RateCurrentQuestionAnswer.QuestionType == "Text")
+                {
+                    <textarea asp-for="@Model.CurrentQuestionAnswer.Answer" class="col-md-12 mb-4 p-2" style="height: 100px" disabled></textarea>
+                }
+                else if (Model.RateCurrentQuestionAnswer.QuestionType == "Numeric")
+                {
+                    <input asp-for="@Model.CurrentQuestionAnswer.Answer" class="mb-4 col-md-4 p-2" disabled />
+                }
+                else
+                {
+                    <div class="selectable-question" style="display: none">
+                        <input asp-for="@Model.RateCurrentQuestionAnswer.QuestionType" value="@Model.RateCurrentQuestionAnswer.QuestionType">
+                        <input asp-for="@Model.RateCurrentQuestionAnswer.PossibleAnswers" value="@Model.RateCurrentQuestionAnswer.PossibleAnswers">
+                        <input asp-for="@Model.CurrentQuestionAnswer.Answer" id="questionAnswers">
+                    </div>
+
+                    <div class="answers-container"></div>
+                }
+
+                <p class ="mt-4 mb-0"><i>Max points: @Model.RateCurrentQuestionAnswer.MaxPoints</i></p>
+                @if (Model.RateCurrentQuestionAnswer.QuestionType == "Multiple answer" || Model.RateCurrentQuestionAnswer.QuestionType == "Single answer")
+                {
+                    @if (@Model.RateCurrentQuestionAnswer.CorrectAnswersCount > 0) {
+                        <p class="mb-0" style="color:green"><i>Correct answers: @Model.RateCurrentQuestionAnswer.CorrectAnswersCount</i></p>
+                    }
+                    @if (@Model.RateCurrentQuestionAnswer.WrongAnswersCount > 0){
+                        <p class="mb-0" style="color:red"><i>Wrong answers: @Model.RateCurrentQuestionAnswer.WrongAnswersCount</i></p>
+                    }
+                }
+                <p class="mt-2" style="width: 90%; font-size: 20px">Points for this answer:</p>
+                <input asp-for="@Model.RateCurrentQuestionAnswer.GivenPoints" value="@Model.RateCurrentQuestionAnswer.GivenPoints" placeholder="Rate the answer..." id="givenPoints">
+                <br/>
+                <span class="text-danger" style="display:none" id="maxPointsError">Max points for this question are @Model.RateCurrentQuestionAnswer.MaxPoints</span>
+
+                <div class="row col-md-12 d-flex justify-content-center mb-4">
+                    <div class="row col-md-2">
+                        <input class="custom-btn" type="submit" value="Rate answer" />
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div id="answersContainer" class="mt-4" style="display: none"></div>
+
+<div class="possible-answer-single form-check" id="answerOptionSingle" style="display: none">
+    <input class="answer-id" style="display:none">
+    <input class="form-check-input" type="radio" name="flexRadioDefault" disabled>
+    <span class="m-1 correct-or-no" style="border-radius: 5px;"></span>
+    <span class="m-1 answer-text" style="border-radius: 5px;"></span>
+</div>
+
+<div class="possible-answer form-check" id="answerOptionMulti" style="display: none">
+    <input class="answer-id" style="display:none">
+    <input class="form-check-input" type="checkbox" disabled>
+    <span class="m-1 correct-or-no" style="border-radius: 5px;"></span>
+    <span class="m-1 answer-text" style="border-radius: 5px;"></span>
+</div>
+
+
+
+<script src="~/js/CheckAnswers.js"></script>

@@ -1,0 +1,60 @@
+﻿@model CoursesQueryModel
+@{
+     ViewData["Title"] = "Grant Access";
+
+    string GetCourseTitleText(string title)
+    {
+        var titleText = title;
+
+        if (titleText.Length > 25)
+        {
+            titleText = titleText.Substring(0, 25) + "...";
+        }
+
+        return titleText;
+    }
+
+}
+
+<h1 class="text-center">Grant Access</h1>
+
+<div class="row mb-3 py-4 search-bar">
+
+    <form method="get" class="d-flex flex-wrap">
+
+        <div class="col-md-3 me-4">
+            <input asp-for="SearchTerm" class="form-control" placeholder="Search course...">
+        </div>
+
+        <div class="form-group col-md-4 me-4">
+            <select asp-for="Sorting" class="form-control">
+                <option value="Desc">Sorted by date descending</option>
+                <option value="Asc">Sorted by date ascending</option>
+            </select>
+        </div>
+
+        <div class="col-md-1 me-4 ms-auto">
+            <input type="submit" class="custom-btn" value="Search">
+        </div>
+
+    </form>
+
+</div>
+
+
+@if (Model.Courses != null)
+{
+    <div class="row d-flex justify-content-start">
+        @foreach (var course in Model.Courses)
+        {
+                <div class="manage-access-card" style="width: 15rem;height:18rem;margin:10px;">
+                <h4 class="card-title text-center">@GetCourseTitleText(course.Title)</h4>
+                <img src="@course.ImageUrl" class="card-img-top img-margin" style="height:8rem;">
+
+                <div class="row p-4 mt-4">
+                    <a class="custom-btn" asp-controller="Courses" asp-action="ManageAccessForCourse" asp-route-id="@course.Id" class="href-text">Manage Access</a>
+                </div>
+            </div>
+        }
+    </div> 
+}

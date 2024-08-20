@@ -1,0 +1,8 @@
+﻿@model CourseFormModel
+
+@{
+    ViewData["Title"] = "Edit Course";
+    ViewBag.Title = "Edit " + Model.Title;
+}
+
+<partial name="_CourseFormPartial" model="@Model" />

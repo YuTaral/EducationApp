@@ -1,0 +1,26 @@
+﻿@model CoursesQueryModel
+@{
+    ViewData["Title"] = "My courses";
+    ViewBag.ShowPages = false; 
+}
+
+
+<h1 class="text-center">My Courses</h1>
+
+<partial name="_CoursesPartial" model="@Model" />
+
+@{
+    if (!Model.Courses.Any()) {
+
+        if (User.IsInRole("Teacher")) {
+            <div class="row text-center mt-5">
+                <h1>You have not added any courses yet or the courses you have does not match the entered criteria</h1>
+            </div>
+        } else if (User.IsInRole("Student")) {
+            <div class="row text-center mt-5">
+                <h1>No courses for which you have access match your criteria</h1>
+            </div>
+        }
+
+    }
+}

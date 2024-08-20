@@ -1,0 +1,55 @@
+﻿@model CheckParticipantsModel
+@{
+    ViewData["Title"] = "Test participants";
+
+    string ReturnUserNameText(TestParticipantModel student)
+    {
+        var displayOption = "Username: " + student.UserName;
+        if (student.FirstName != null)
+        {
+            displayOption += ", Name: " + student.FirstName;
+        }
+        if (student.LastName != null)
+        {
+            displayOption += " " + student.LastName;
+        }
+        if (student.FacultyNumber != null)
+        {
+            displayOption += ", Faculty number: " + student.FacultyNumber;
+        }
+
+        return displayOption;
+    }
+}
+
+<div class="d-flex justify-content-center mt-2 col-md-12">
+    <div class="row col-md-6 card-details p-3">
+        <h3 class="text-center mb-2 pb-2 border-bottom border-dark border-2">Participants</h3>
+
+        @if (Model.Participants != null && Model.Participants.Count > 0)
+        {
+            @foreach (var record in Model.Participants)
+            {
+                
+                <div class="row col-md-12 d-flex justify-content-center m-2 p-2 border-bottom border-dark border-2">
+                    <span class="text-center mb-2">@ReturnUserNameText(record)</span>
+
+                    @if (record.IsGradeSubmitted)
+                    {
+                        <span class="text-center mb-1">Points: @record.Points</span>
+                        <span class="text-center mb-2">Final result: @record.Percent%</span>
+                    } else {
+                        <span class="text-center mb-1">Final grade not submitted</span>
+                        <span class="text-center mb-1">Current points: @record.Points</span>
+                    }
+
+                    <a class="custom-btn col-md-2" asp-controller="Tests" asp-action="CheckAnswers" asp-route-studentId="@record.StudentId" asp-route-testId="@record.TestId" asp-route-sequence="1">Check</a>
+                </div>
+            }
+        }
+        else
+        {
+            <h4 class="text-center mt-2">There is no participants in this test</h4>
+        }
+    </div>
+</div>

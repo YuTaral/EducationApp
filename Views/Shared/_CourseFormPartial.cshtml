@@ -1,0 +1,29 @@
+﻿@model CourseFormModel
+
+<form class="row g-3 col-6 offset-3 shadow mt-4 p-4 action-form" method="post">
+
+    <h2 class="text-center">@ViewBag.Title</h2>
+
+    <div>
+        <label asp-for="Title" class="form-label">Title</label>
+        <input asp-for="Title" class="form-control" placeholder="Course title...">
+        <span asp-validation-for="Title" class="small text-danger"></span>
+    </div>
+
+    <div>
+        <label asp-for="Description" class="form-label">Description</label>
+        <textarea asp-for="Description" class="form-control" rows="3" placeholder="Describe the course..."></textarea>
+        <span asp-validation-for="Description" class="small text-danger"></span>
+    </div>
+
+    <div>
+        <label asp-for="ImageUrl" class="form-label">Image Url</label>
+        <input asp-for="ImageUrl" class="form-control" placeholder="Image Url...">
+        <span asp-validation-for="ImageUrl" class="small text-danger"></span>
+    </div>
+
+    <div class="d-flex justify-content-center">
+        <input class="custom-btn col-4" type="submit" value="Save">
+    </div>
+
+</form>

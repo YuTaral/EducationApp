@@ -1,0 +1,40 @@
+﻿@model CourseDetailsServiceModel
+@{
+    ViewData["Title"] = "Course details";
+}
+
+
+<div class="d-flex align-items-start">
+
+    <div class="row card-details p-3 col-4 shadow mt-4" style="width: 25rem;">
+        <h3 class="text-center">@Model.Title</h3>
+        <img src="@Model.ImageUrl" class="card-img-top" alt="..." style="max-height:20rem;">
+        <div class="card-body">
+            <p class="card-text">@Model.Description</p>
+        </div>
+
+        @{
+            if (Model.CanEdit)
+            {
+                <div class="d-flex justify-content-between m-2">
+                    <div class="row col-md-4">
+                        <a class="custom-btn" asp-controller="Lessons" asp-action="Add" asp-route-id="@Model.Id">Add lessons</a>
+                    </div>
+                    <div class="row col-md-4">
+                        <a class="custom-btn" asp-controller="Courses" asp-action="Edit" asp-route-id="@Model.Id">Edit</a>
+                    </div>
+                    <div class="row col-md-4">
+                        <a class="custom-btn" asp-controller="Courses" asp-action="Delete" asp-route-id="@Model.Id">Delete</a>
+                    </div>
+                    
+                </div>
+            }
+        }
+    </div>
+
+    <partial name="_CourseLessons" model="@Model" />
+
+</div>
+
+
+

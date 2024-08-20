@@ -1,0 +1,73 @@
+﻿@model LessonFormModel
+
+
+<div class="d-flex align-items-start">
+
+    <a asp-controller="Courses" asp-action="Details" asp-route-id="@Model.CourseDetails.Id" class="card-href-text">
+        <div class="row card-details p-3 col-4 shadow mt-4" style="width: 25rem;">
+            <h3 class="text-center">@Model.CourseDetails.Title</h3>
+            <img src="@Model.CourseDetails.ImageUrl" class="card-img-top" alt="..." style="max-height:20rem;">
+            <div class="card-body">
+                <p class="card-text">@Model.CourseDetails.Description</p>
+            </div>
+        </div>
+
+    </a>
+
+    <form class="row col-6 offset-1 action-form p-4 mb-4 mt-4" method="post">
+        <h2 class="text-center">@ViewBag.Title</h2>
+
+        <div class="mb-3">
+            <label asp-for="Title" class="form-label">Title</label>
+            <input asp-for="Title" class="form-control" placeholder="Lesson title...">
+            <span asp-validation-for="Title" class="small text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Description" class="form-label">Description</label>
+            <textarea asp-for="Description" class="form-control" rows="3" placeholder="Describe the lesson..."></textarea>
+            <span asp-validation-for="Description" class="small text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="FromDateTime" class="form-label mb-0">From</label>
+            <br />
+            <label class="mb-2" style="font-size: 14px; font-style: italic">Specify lesson starting date and time (select date and type in hours and minutes)</label>
+            <input asp-for="FromDateTime" class="form-control" type="datetime-local" />
+            <span asp-validation-for="FromDateTime" class="small text-danger"></span>
+        </div>
+
+        <div class="mb-4">
+            <label asp-for="ToDateTime" class="form-label mb-0">Due to</label>
+            <br />
+            <label class="mb-2" style="font-size: 14px; font-style: italic">Specify lesson ending date and time (select date and type in hours and minutes)</label>
+            <input asp-for="ToDateTime" class="form-control" type="datetime-local"/>
+            <span asp-validation-for="ToDateTime" class="small text-danger"></span>
+        </div>
+
+
+        <div class="d-flex justify-content-center mb-4">
+
+            @if (Model.LessonTypes != null) {
+                @foreach (var type in Model.LessonTypes)
+                {
+                    <div class="row col-2 mx-4">
+                        <input asp-for="LessonType" type="radio" value="@type.Name" class="custom-btn-check" id="@type.Name">
+                        <label asp-for="LessonType" class="custom-btn custom-btn-label" for="@type.Name">@type.Name</label>
+                    </div>
+                }
+            }
+            
+        </div>
+        <span asp-validation-for="LessonType" class="small text-danger text-center"></span>
+
+        <input asp-for="CourseId" value="@Model.CourseDetails.Id" class="invisible" />
+
+        <div class="d-flex justify-content-center">
+            <input class="custom-btn col-4" type="submit" value="Save">
+        </div>
+
+      </form>
+
+</div>
+

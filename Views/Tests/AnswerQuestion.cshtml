@@ -1,0 +1,187 @@
+﻿@model AnswerQuestionFormModel
+@{
+    ViewData["Title"] = "Test";
+    ViewBag.Title = "Test";
+}
+
+@{
+    var next = Model.Sequence + 1;
+    var prev = Model.Sequence - 1;
+    var timeIsOver = Model.EndsAt <= DateTime.Now;
+    var submitDialogTitle = Model.AskForSubmit ? "Submit test" : "Time is over";
+    var submitDialogText = Model.AskForSubmit ? "That was the last question. Do you want to submit your test?" : "Time is over. Click 'Okay' to submit your exam.";
+
+    string GetQuestionNumberClass(int i)
+    {
+        var qClass = "";
+
+        if (Model.Sequence == i) {
+            qClass = "custom-btn m-1";
+        } else{
+            qClass = "btn border m-1";
+
+        }
+
+        return qClass;
+    }
+
+}
+<h2 class="text-center mb-4">@ViewBag.Title</h2>
+
+@if (Model.AskForSubmit || timeIsOver)
+{
+    <div class="container">
+        <div class="modal" id="modalResults" style="display: block">
+            <div class="modal-dialog">
+                <div class="modal-content shadow">
+                    <div>
+                        <h1 class="text-center">@submitDialogTitle</h1>
+                    </div>
+                    <div class="modal-body">
+                        <div class="text-center">
+                            <h4 class="text-center">@submitDialogText</h4>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between mt-2 mb-2">
+                        @if (timeIsOver) {
+                            <a class="custom-btn col-md-4" asp-controller="Tests" asp-action="SubmitTest" asp-route-testId="@Model.TestId">Okay</a>
+                        } else {
+                            <button type="button" class="custom-btn col-md-4" data-bs-dismiss="modal" id="closeDialog">No</button>
+                            <a class="custom-btn  col-md-4" asp-controller="Tests" asp-action="SubmitTest" asp-route-testId="@Model.TestId">Yes</a>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<a id="submitTestBtn" style="display:none" class="custom-btn col-md-4" asp-controller="Tests" asp-action="SubmitTest" asp-route-testId="@Model.TestId">Yes</a>
+
+<div class="d-flex justify-content-center mt-2 col-md-12">
+
+    <div class="row p-3 col-12 mb-4">
+
+        <div class="d-flex justify-content-between col-md-12">
+            <div class="mb-4 m-1">
+                @if (Model.PreviousExists) {
+                    <a class="custom-btn " asp-controller="Tests" asp-action="AnswerQuestion" asp-route-testId="@Model.TestId" asp-route-sequence="@prev">&lt;</a>
+                } else {
+                    <button type="button" class="custom-btn btn disabled">&lt;</button>
+                }
+            </div>
+
+            <div class="d-flex justify-content-center mb-4 flex-wrap">
+
+                @for(int i = 1; i <= Model.AllQuestionsCount; i ++)
+                {
+                    <a class="@GetQuestionNumberClass(i)"  asp-controller="Tests" asp-action="AnswerQuestion" asp-route-testId="@Model.TestId" asp-route-sequence="@i">@i</a>
+                }
+
+            </div>
+
+            <div class="mb-4 m-1">
+                @if (Model.NextExists) {
+                    <a class="custom-btn" asp-controller="Tests" asp-action="AnswerQuestion" asp-route-testId="@Model.TestId" asp-route-sequence="@next">&gt;</a>
+                }
+                else {
+                    <button type="button" class="custom-btn btn disabled">&gt;</button>
+                }
+            </div>
+        </div>
+
+            <dv class="row col-md-12 d-flex-justify-content-center">
+               <span class="text-center mb-2" id="countdown" style="font-size: 20px; font-style: italic; font-weight: bold"></span>
+            </dv>
+
+            <div class="card-details mb-4 d-flex flex-column p-3">
+                <form method="post" onsubmit="return handleSubmit()">
+                        <div style="display: none">
+                             <input asp-for="@Model.Id" value="@Model.Id">
+                             <input asp-for="@Model.AllQuestionsCount" value="@Model.AllQuestionsCount">
+                        </div>
+
+                        <p class="" style="width: 90%; font-size: 20px">@Model.Sequence. @Model.QuestionText</p>
+
+                        @if (Model.QuestionType == "Text") {
+                            <textarea asp-for="Answer" class="col-md-12 mb-4 p-2" style="height: 100px"></textarea>
+                        }
+                        else if (Model.QuestionType == "Numeric") {
+                            <input type="number" asp-for="@Model.Answer" class="mb-4 col-md-4 p-2" />
+                        }
+                        else {
+                            <div class="selectable-question" style="display: none">
+                                <input asp-for="@Model.QuestionType" value="@Model.QuestionType">
+                                <input asp-for="@Model.PossibleAnswers" value="@Model.PossibleAnswers">
+                                <input asp-for="@Model.Answer" id="questionAnswers">
+                            </div>
+                            <div class="answers-container"></div>
+                        }
+                        <div class="row col-md-12 d-flex justify-content-center mb-4">
+                            <div class="row col-md-2">
+                            <input class="custom-btn" type="submit" value="Save answer" />
+                            </div>
+                        </div>
+                 </form>
+            </div>
+    </div>
+</div>
+
+<div id="answersContainer" class="mt-4" style="display: none"></div>
+
+<div class="possible-answer-single form-check" id="answerOptionSingle" style="display: none">
+    <input class="answer-id" style="display:none">
+    <input class="form-check-input" type="radio" name="flexRadioDefault">
+    <span class="m-2"></span>
+</div>
+
+<div class="possible-answer form-check" id="answerOptionMulti" style="display: none">
+    <input class="answer-id" style="display:none">
+    <input class="form-check-input" type="checkbox">
+    <span class="m-2"></span>
+</div>
+
+<script>
+    var dialog = document.getElementById('closeDialog');
+    if (dialog != null) {
+        dialog.addEventListener('click', function () {
+            document.getElementById('modalResults').style.display = 'none';
+        });
+    }
+
+    const futureDate = new Date('@Model.EndsAt.ToString("yyyy-MM-ddTHH:mm:ss")');
+
+    function updateCountdown() {
+        const currentDate = new Date();
+        const timeRemaining = futureDate - currentDate;
+
+        if (timeRemaining <= 0) {
+            document.getElementById('submitTestBtn').click();
+        }
+
+        const days = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
+
+        const countdownElement = document.getElementById("countdown");
+        countdownElement.innerHTML = 'Time left:';
+
+        if (days > 0) {
+            countdownElement.innerHTML += ` ${days} days,`;
+        }
+        if (hours > 0) {
+            countdownElement.innerHTML += ` ${hours} hours,`;
+        }
+        if (minutes > 0) {
+            countdownElement.innerHTML += ` ${minutes} minutes,`;
+        }
+
+        countdownElement.innerHTML += ` ${seconds} seconds`;
+    }
+
+    setInterval(updateCountdown, 1000);
+    updateCountdown();
+</script>
+
+<script src="~/js/AnswerQuestion.js"></script>

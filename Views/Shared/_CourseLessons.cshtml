@@ -1,0 +1,82 @@
+﻿@model CourseDetailsServiceModel
+
+<head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="/css/site.css" asp-append-version="true" />
+</head>
+
+@{
+    string GetLessonTitleText(string title)
+    {
+        var lessonTitle = title;
+
+        if (lessonTitle.Length > 40)
+        {
+            lessonTitle = lessonTitle.Substring(0, 40) + "...";
+        }
+
+        return lessonTitle;
+    }
+
+}
+
+@{
+    if (Model.Lessons.Count > 0)
+    {
+        <div class="row col-8 offset-1">
+            @foreach (var lesson in Model.Lessons)
+            {
+                if (@lesson.FromDateTime.ToString("dd MMMM yy").Equals(@lesson.ToDateTime.ToString("dd MMMM yy")))
+                {
+                    var displayDate = "";
+                    displayDate = lesson.FromDateTime.ToString("dddd dd MMMM yy") + ", " + lesson.FromDateTime.ToString("HH:mm") + " - " + lesson.ToDateTime.ToString("HH:mm");
+                    <h6 class="mt-3" style="font-style: italic">@displayDate</h6>
+                }
+                else
+                {
+                    <h6 class="mt-3" style="font-style: italic">From: @lesson.FromDateTime.ToString("dddd HH:mm, dd MMMM yy")</h6>
+                    <h6 style="font-style: italic">Due to: @lesson.ToDateTime.ToString("dddd HH:mm, dd MMMM yy")</h6>
+                }
+
+                <div class="shadow d-flex justify-content-between lesson" style="width:100%">
+                    @{
+                        if (@lesson.LessonType == "Lecture")
+                        {
+                            <img src="/images/lecture.png" class="lesson-type-icon">
+                        }
+                        else if (@lesson.LessonType == "Exercise")
+                        {
+                            <img src="/images/exercise.png" class="lesson-type-icon">
+                        }
+                        else if (@lesson.LessonType == "Test")
+                        {
+                            <img src="/images/test.png" class="lesson-type-icon">
+                        }
+                    }
+
+                    <h4 class="underline mt-3">@GetLessonTitleText(lesson.Title)</h4>
+                    <span class="toggle">&#43;</span>
+
+                </div>
+
+
+                <div class="extra-description p-2">
+                    <p class="m-3">@lesson.Description</p>
+                    @if (Model.CanViewMore)
+                    {
+                        <div class="d-flex justify-content-center mb-1">
+                            <a asp-controller="Lessons" asp-action="Details" asp-route-id="@lesson.Id" class="custom-btn">View more</a>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    } else {
+        <div class="row col-6 offset-2">
+            <h2 class="text-center">No lessons for this course yet</h2>
+        </div>
+    }
+}
+
+<script src="/js/CourseLessons.js"></script>
+

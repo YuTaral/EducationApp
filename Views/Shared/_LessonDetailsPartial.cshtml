@@ -1,0 +1,193 @@
+﻿@model LessonDetailsServiceModel
+
+@{
+    var uploadedFilesString = "";
+    string[] successfullyUploaded = new string[] { };
+
+    if (Model.UploadedFiles.Count == 0)
+    {
+        uploadedFilesString = "No materials uploaded";
+    }
+
+    if (ViewData["Result"] != null && ViewData["Result"].ToString() != "")
+    {
+        successfullyUploaded = ViewData["Result"].ToString().Split("\n");
+    }
+
+    var checkAnswers = Model.ToDateTime < DateTime.Now;
+
+    var testId = 0;
+
+    if (Model.TestId != 0)
+    {
+        testId = Model.TestId;
+    }
+
+    DateTime now = DateTime.Now;
+    var canStartTest = Model.FromDateTime <= now && Model.ToDateTime > now;
+    var allowManageTest = Model.FromDateTime >  now;
+}
+
+@if (successfullyUploaded.Length > 0)
+{
+    <div class="modal" id="modalResults" style="display: block">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div>
+                    <h5 class="text-center">Uploaded files</h5>
+                </div>
+                <div class="modal-body">
+                    @foreach (var r in successfullyUploaded)
+                    {
+                        <p>@r</p>
+                    }
+                </div>
+                <div class="col-md-12 d-flex justify-content-center">
+                    <button type="button" class="custom-btn col-md-4" data-bs-dismiss="modal" id="closeResults">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<div id="uploadModal" class="modal">
+    <div class="modal-content">
+        <h2 class="text-center">Upload File</h2>
+        <form method="post" enctype="multipart/form-data">
+            <input asp-for="Files" class="form-control mt-2" type="file" id="fileInput" multiple />
+
+            <div class="d-flex justify-content-between mt-4">
+                <button class="custom-btn" id="cancelBtn">Cancel</button>
+                <button class="custom-btn" id="uploadBtn">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<div class="row card-details p-3 col-7 align-self-start mt-4">
+    <h3 class="text-center border-bottom border-dark border-2 mb-2 pb-2">@Model.Title - @Model.LessonType</h3>
+    <div class="card-body">
+
+        @if (@Model.FromDateTime.ToString("dd MMMM yy").Equals(@Model.ToDateTime.ToString("dd MMMM yy")))
+        {
+            var displayDate = Model.FromDateTime.ToString("dddd dd MMMM yy") + ", " + Model.FromDateTime.ToString("HH:mm") + " - " + Model.ToDateTime.ToString("HH:mm");
+            <p><b>Date: </b>@displayDate</p>
+        }
+        else
+        {
+            <p><b>Date:</b> @Model.FromDateTime.ToString("dddd HH:mm, dd MMMM yy")</p>
+            <p><b>Due to:</b> @Model.ToDateTime.ToString("dddd HH:mm, dd MMMM yy")</p>
+        }
+
+        <p class="card-text"><b>More information: </b>@Model.Description</p>
+
+        @if (Model.LessonType.Equals("Lecture") || Model.LessonType.Equals("Exercise"))
+        {
+            
+            if (Model.UploadedFiles.Count > 0)
+            {
+                <p class="text-center border-top border-dark border-2"><b>Files</b></p>
+                @foreach (var file in Model.UploadedFiles)
+                {
+                    <div class="d-flex justify-content-start col-12">
+                        @if (file.Name.Length > 10)
+                        {
+                            <p class="col-2">@file.Name.Substring(0, 10)...</p>
+                        }
+                        else
+                        {
+                            <p class="col-2">@file.Name.Substring(0, file.Name.Length - 4)</p>
+                        }
+                        <a class="custom-btn download-btn col-2 ms-4" href="@Url.Action("DownloadMaterials", "Lessons",  new {fileId = file.Id})">Download</a>
+                        @if (Model.CanEdit)
+                        {
+                            <a class="custom-btn download-btn col-2 ms-4" href="@Url.Action("RemoveMaterials", "Lessons",  new {fileId = file.Id})">Remove</a>
+                        }
+                    </div>
+                }
+            }
+            else {
+                <p>@uploadedFilesString</p>
+            }
+        }
+        <p class="border-top border-dark border-2"></p>
+    </div>
+        
+    @{
+        if (Model.CanEdit)
+        {
+            <div class="d-flex justify-content-between px-3">
+                <div class="row col-md-3">
+                    @if (Model.LessonType.Equals("Test"))
+                    {
+                        if (allowManageTest) {
+                            <a class="custom-btn" asp-controller="Tests" asp-action="Add" asp-route-id="@testId" asp-route-lessonId="@Model.Id">Manage Test</a>
+                        } else {
+                            <a class="custom-btn btn disabled" asp-controller="Tests" asp-action="Add" asp-route-id="@testId" asp-route-lessonId="@Model.Id">Manage Test</a>
+                        }
+                    } else
+                    {
+                        <button class="custom-btn" id="openUploadPopup">Upload materials</button>
+                    }
+                </div>
+                <div class="row col-md-3">
+                    <a class="custom-btn" asp-controller="Lessons" asp-action="Edit" asp-route-id="@Model.Id">Edit</a>
+                </div>
+
+                <div class="row col-md-3">
+                    @if (checkAnswers && Model.LessonType.Equals("Test"))
+                    {
+                        <a class="custom-btn" asp-controller="Tests" asp-action="CheckParticipants" asp-route-testId="@Model.TestId">Check participants</a>
+                    } else {
+                        <a class="custom-btn" asp-controller="Lessons" asp-action="Delete" asp-route-id="@Model.Id">Delete</a>
+                    }
+                </div>
+            </div>
+        }
+        else if (Model.LessonType == "Exercise" && User.IsInRole("Student"))
+        {
+            <div class="row d-flex justify-content-evenly m-2">
+                <div class="row col-md-6">
+                    <button class="custom-btn" id="openUploadPopup">Upload homework</button>
+                </div>
+            </div>
+        }
+        else if (Model.LessonType == "Test" && User.IsInRole("Student"))
+        {
+            <div class="row d-flex justify-content-evenly m-2">
+               
+                @if (Model.IsTestSubmitted)
+                {
+                    <span class="text-center mb-2">Your test has been submitted</span>
+
+                    @if(Model.IsGradeSubmitted)
+                    {
+                        <span class="text-center">Final result: @Model.Percent%</span>
+                    }
+                } else if  (canStartTest) {
+                    <div class="row col-md-4">
+                        <a class="custom-btn" asp-controller="Tests" asp-action="AnswerQuestion" asp-route-testId="@Model.TestId" asp-route-sequence="1">Start test</a>
+                    </div>
+                } else {
+                    @if (now > Model.ToDateTime) {
+                        <div class="row col-md-12">
+                            <span class="text-center mb-2">The test ended on @Model.ToDateTime.ToString("dddd HH:mm, dd MMMM yy")</span>
+                        </div>
+                    }
+                    else {
+                        <div class="row col-md-12">
+                            <span class="text-center mb-2">The test will start on @Model.FromDateTime.ToString("dddd HH:mm, dd MMMM yy")</span>
+                        </div>
+                    }
+                }
+                   
+            </div>
+        }
+    }
+</div>
+
+
+
+
+<script src="/js/LessonDetailsPartial.js"></script>

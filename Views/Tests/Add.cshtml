@@ -1,0 +1,129 @@
+﻿@model QuestionFormModel
+@{
+    ViewData["Title"] = "Add new test";
+}
+
+<div class="d-flex justify-content-between mt-2 col-md-12">
+    <div class="row col-md-6 shadow card-details p-3 align-self-start">
+        <h3 class="text-center mb-2 pb-2 border-bottom border-dark border-2">Add new question</h3>
+
+        <form class="mt-2 p-4" method="post" onsubmit="return handleSubmit()">
+            <div style="display: none">
+                <input asp-for="Test.Id">
+                <input asp-for="Id" value="@Model.Id">
+                <input asp-for="Sequence">
+                <input asp-for="Type" id="typeField">
+                <input asp-for="EditQuestion" value="@Model.EditQuestion" id="editQuestionField">
+                <input asp-for="PossibleAnswers" id="questionAnswers" />
+            </div>
+
+            <div class="d-flex justify-content-center">
+                <select class="select col-md-4 mb-4" style="height: 30px" id="questionTypeSelect" onchange="generateQuestionFields(true)">
+                    @foreach (var qtype in Model.QuestionTypes)
+                    {
+
+                        @if (qtype.Name == Model.Type)
+                        {
+                            <option class="p-2" value="@qtype.Name" selected>@qtype.Name</option>
+                        } else
+                        {
+                            <option class="p-2" value="@qtype.Name">@qtype.Name</option>
+                        }
+                    }
+                </select>
+               
+            </div>
+           
+            <div id="qFieldsContainer">
+                <div class="mb-3">
+                    <label asp-for="Text" class="form-label">Question #@Model.Sequence</label>
+                    <input asp-for="Text" class="form-control" placeholder="Enter question...">
+                    <span asp-validation-for="Text" class="small text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Points" class="form-label">Points</label>
+                    <input asp-for="Points" class="form-control" placeholder="Enter points for correct answer...">
+                    <span asp-validation-for="Points" class="small text-danger"></span>
+                </div>
+            </div>
+
+
+            <div id="singleMultiAnswersContainer">
+                <label asp-for="AnswersCount" class="form-label">Answers count</label>
+                <div class="d-flex justify-content-between">
+                    <input asp-for="AnswersCount" class="form-control w-50" id="answersCount" placeholder="Enter answers count...">
+                    <div>
+                        <a class="custom-btn" id="changeCountBtn" onclick="addRemoveAnswers(true)">Add</a>
+                        <a class="custom-btn" id="changeCountBtn" onclick="addRemoveAnswers(false)">Remove</a>
+                    </div>
+                </div>
+                <span asp-validation-for="AnswersCount" class="small text-danger"></span>
+            </div>
+            
+            @if (Model.EditQuestion) {
+                <div class="d-flex justify-content-center mt-4">
+                    <input class="custom-btn col-2" type="submit" value="Update">
+                    <a class="custom-btn mx-2" asp-controller="Tests" asp-action="Add" asp-route-id="@Model.Test.Id" asp-route-lessonId="@Model.Test.LessonId">Cancel</a>
+                </div>
+            } else {
+                <div class="d-flex justify-content-center mt-4">
+                    <input class="custom-btn col-2" type="submit" value="Add">
+                </div>
+            }
+           
+        </form>
+        
+    </div>
+
+    <div class="row card-details p-3 col-6 shadow align-self-start mb-4">
+        <h3 class="text-center border-bottom border-dark border-2 mb-4 pb-2">Added questions</h3>
+        @if (Model.Test.Questions != null)
+        {
+            @foreach (var q in Model.Test.Questions)
+            {
+                <div class="added-question shadow mb-4 d-flex justify-content-between">
+                    <p class="pt-3" style="width: 80%">@q.Sequence. @q.Text</p> 
+                    <div class="pt-3">
+                        <a asp-controller="Tests" asp-action="EditQuestion" asp-route-testId="@Model.Test.Id" asp-route-lessonId="@Model.Test.LessonId" asp-route-questionId="@q.Id" asp-route-type="@q.Type" style="text-decoration:none;"><span class="edit-q-buttons">&#9998;</span></a>
+                        <a asp-controller="Tests" asp-action="RemoveQuestion" asp-route-testId="@Model.Test.Id" asp-route-lessonId="@Model.Test.LessonId" asp-route-questionId="@q.Id" asp-route-type="@q.Type" style="text-decoration:none;"><span class="edit-q-buttons">&#10006;</span></a>
+                     </div>
+                </div>
+            }
+        } 
+    </div>
+</div>
+
+<div id="answersContainer" class="mt-4" style="display: none"></div>
+
+<div class="possible-answer-single form-check m-2" id="answerOptionSingle" style="display: none">
+    <input class="form-check-input" style="margin-top: 12px" type="radio" name="flexRadioDefault">
+    <input class="form-control" placeholder="Answer's text...">
+</div>
+
+<div class="possible-answer form-check m-2" id="answerOptionMulti" style="display: none">
+    <input class="form-check-input" style="margin-top: 12px" type="checkbox">
+    <input class="form-control" placeholder="Answer's text...">
+</div>
+
+
+<div class="modal" id="modalResults" style="display: none">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div>
+                <h5 class="text-center">Missing Correct Answer</h5>
+            </div>
+            <div class="modal-body">
+                <h6 class="text-center">Please specify atleast one correct answer</h6>
+            </div>
+            <div class="col-md-12 d-flex justify-content-center">
+                <button type="button" class="custom-btn col-md-4" data-bs-dismiss="modal" id="closeResults">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/js/AddTest.js"></script>
+
+
+
